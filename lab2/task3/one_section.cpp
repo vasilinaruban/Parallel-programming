@@ -10,7 +10,7 @@ size_t threads;
 
 void MatrixVectorProduct(const std::vector<double> &matrix, const std::vector<double> &vector,
                          std::vector<double> &resultVector, int lb, int ub) {
-    for (int i = lb; i <= ub; ++i) {
+    for (int i = lb; i < ub; ++i) {
         resultVector[i] = 0;
         for (int j = 0; j < N; ++j)
             resultVector[i] += matrix[i * N + j] * vector[j];
@@ -19,21 +19,35 @@ void MatrixVectorProduct(const std::vector<double> &matrix, const std::vector<do
 
 void VectorSubtraction(const std::vector<double> &vector0, const std::vector<double> &vector1,
                        std::vector<double> &resultVector, int lb, int ub) {
-    for (int i = lb; i <= ub; ++i)
+    for (int i = lb; i < ub; ++i)
         resultVector[i] = vector0[i] - vector1[i];
 }
 
 void ScalarVectorProduct(double scalar, const std::vector<double> &vector, std::vector<double> &resultVector,
                          int lb, int ub) {
-    for (int i = lb; i <= ub; ++i)
+    for (int i = lb; i < ub; ++i)
         resultVector[i] = scalar * vector[i];
 }
 
 double squaredNorm(const std::vector<double> &vector, int lb, int ub) {
     double result{};
-    for (int i = lb; i <= ub; ++i)
+    for (int i = lb; i < ub; ++i)
         result += vector[i] * vector[i];
     return result;
+}
+
+int bound (int id, int remainder, int items_per_thread)
+{
+    int bound = 0;
+    if (id < remainder)
+    {
+        bound = id * (items_per_thread + 1);
+    }
+    else
+    {
+        bound = remainder * (items_per_thread + 1) + (id - remainder) * items_per_thread;
+    }
+    return bound;
 }
 
 void Algorithm(const std::vector<double> &A, const std::vector<double> &b, std::vector<double> &X, double tau) {
@@ -41,11 +55,12 @@ void Algorithm(const std::vector<double> &A, const std::vector<double> &b, std::
     double numerator{}, denominator{};
 #pragma omp parallel num_threads(threads)
     {
-        int nThreads = omp_get_num_threads();
-        int threadId = omp_get_thread_num();
-        int items_per_thread = N / nThreads;
-        int lb = threadId * items_per_thread;
-        int ub = (threadId == nThreads - 1) ? (N - 1) : (lb + items_per_thread - 1);
+        int nthreads = omp_get_num_threads();
+        int threadid = omp_get_thread_num();
+        int k = N % nthreads;
+        int items_per_thread = N / nthreads;
+        int lb = bound(threadid, k, items_per_thread);
+        int ub = bound(threadid + 1, k, items_per_thread);
         double numBuf{}, denomBuf{};
         while (true) {
             MatrixVectorProduct(A, X, bufferVector, lb, ub);
