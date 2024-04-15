@@ -56,6 +56,7 @@ double integrate_omp(double (*func)(double), double a, double b, int n)
     {
         int nthreads = omp_get_num_threads();
         int threadid = omp_get_thread_num();
+        int k = n % nthreads;
         int items_per_thread = n / nthreads;
         int lb = bound(threadid, k, items_per_thread);
         int ub = bound(threadid + 1, k, items_per_thread);
@@ -66,7 +67,7 @@ double integrate_omp(double (*func)(double), double a, double b, int n)
 	    #pragma omp atomic
 	    sum += local_sum;
 	}
-	
+
     sum *= h;
 
     return sum;
