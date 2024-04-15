@@ -63,10 +63,10 @@ void Algorithm(const std::vector<double> &A, const std::vector<double> &b, std::
         int ub = bound(threadid + 1, k, items_per_thread);
         double numBuf{}, denomBuf{};
         while (true) {
-            MatrixVectorProduct(A, X, bufferVector, lb, ub);
-            VectorSubtraction(bufferVector, b, bufferVector, lb, ub);
-            numBuf = squaredNorm(bufferVector, lb, ub);
-            denomBuf = squaredNorm(b, lb, ub);
+        MatrixVectorProduct(A, X, bufferVector, lb, ub);
+        VectorSubtraction(bufferVector, b, bufferVector, lb, ub);
+        numBuf = squaredNorm(bufferVector, lb, ub);
+        denomBuf = squaredNorm(b, lb, ub);
 #pragma omp single
             {
                 numerator = 0;
@@ -81,7 +81,7 @@ void Algorithm(const std::vector<double> &A, const std::vector<double> &b, std::
                 numerator = sqrt(numerator);
                 denominator = sqrt(denominator);
             }
-            if (numerator < 0.00001 * denominator)
+            if (numerator < tau * denominator)
                 break;
             ScalarVectorProduct(tau, bufferVector, bufferVector, lb, ub);
             VectorSubtraction(X, bufferVector, X, lb, ub);
