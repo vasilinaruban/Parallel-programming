@@ -1,2 +1,3 @@
 all:
-	g++ -fopenmp main.c -o main -lm
+	g++ -fopenmp one_section.cpp -o one -lm
+	g++  -fopenmp multiple_sections.cpp -o multiple -lm
