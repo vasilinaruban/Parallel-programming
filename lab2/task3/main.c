@@ -50,8 +50,8 @@ void Algorithm(const std::vector<double> &A, const std::vector<double> &b, std::
 
 int main(int argc, char **argv) {
     N = atoi(argv[1]);
-    double tau = std::stod(argv[2]);
-    threads = atoi(argv[3]);
+    double tau = 0.00001;
+    threads = atoi(argv[2]);
 
     std::vector<double> A(N * N, 1);
 
