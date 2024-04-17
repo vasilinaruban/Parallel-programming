@@ -72,15 +72,12 @@ void matrix_vector_product_omp(double *a, double *b, double *c, size_t m, size_t
 void run_serial(size_t n, size_t m)
 {
     double *a, *b, *c;
-    a = (double*)malloc(sizeof(*a) * m * n);
-    b = (double*)malloc(sizeof(*b) * n);
-    c = (double*)malloc(sizeof(*c) * m);
+    std::unique_ptr<double[]> a(new double[m * n]);
+    std::unique_ptr<double[]> b(new double[n]);
+    std::unique_ptr<double[]> c(new double[m]);
 
     if (a == NULL || b == NULL || c == NULL)
     {
-        free(a);
-        free(b);
-        free(c);
         printf("Error allocate memory!\n");
         exit(1);
     }
@@ -99,24 +96,18 @@ void run_serial(size_t n, size_t m)
     t = cpuSecond() - t;
 
     printf("Elapsed time (serial): %.6f sec.\n", t);
-    free(a);
-    free(b);
-    free(c);
 }
 
 void run_parallel(size_t n, size_t m)
 {
     double *a, *b, *c;
 
-    a = (double*)malloc(sizeof(*a) * m * n);
-    b = (double*)malloc(sizeof(*b) * n);
-    c = (double*)malloc(sizeof(*c) * m);
+    std::unique_ptr<double[]> a(new double[m * n]);
+    std::unique_ptr<double[]> b(new double[n]);
+    std::unique_ptr<double[]> c(new double[m]);
 
     if (a == NULL || b == NULL || c == NULL)
     {
-        free(a);
-        free(b);
-        free(c);
         printf("Error allocate memory!\n");
         exit(1);
     }
@@ -138,9 +129,6 @@ void run_parallel(size_t n, size_t m)
     t = cpuSecond() - t;
 
     printf("Elapsed time (parallel): %.6f sec.\n", t);
-    free(a);
-    free(b);
-    free(c);
 }
 
 int main(int argc, char *argv[])

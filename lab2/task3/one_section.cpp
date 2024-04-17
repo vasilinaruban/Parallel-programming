@@ -81,7 +81,7 @@ void Algorithm(const std::vector<double> &A, const std::vector<double> &b, std::
                 numerator = sqrt(numerator);
                 denominator = sqrt(denominator);
             }
-            if (numerator < tau * denominator)
+            if (numerator < 0.00001 * denominator)
                 break;
             ScalarVectorProduct(tau, bufferVector, bufferVector, lb, ub);
             VectorSubtraction(X, bufferVector, X, lb, ub);
