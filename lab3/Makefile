@@ -1,2 +1,2 @@
 all:
-	g++ -fopenmp main.c -o main
+	g++ -fopenmp main.cpp -o main
