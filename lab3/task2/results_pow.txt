@@ -1,0 +1,10 @@
+Task ID: 20 Result: 100
+Task ID: 21 Result: 1331
+Task ID: 22 Result: 20736
+Task ID: 23 Result: 371293
+Task ID: 24 Result: 7.52954e+06
+Task ID: 25 Result: 1.70859e+08
+Task ID: 26 Result: 4.29497e+09
+Task ID: 27 Result: 1.18588e+11
+Task ID: 28 Result: 3.57047e+12
+Task ID: 29 Result: 1.1649e+14

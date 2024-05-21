@@ -1,0 +1,10 @@
+Task ID: 2 Result: -0.544021
+Task ID: 8 Result: -0.99999
+Task ID: 11 Result: -0.536573
+Task ID: 12 Result: 0.420167
+Task ID: 13 Result: 0.990607
+Task ID: 14 Result: 0.650288
+Task ID: 16 Result: -0.287903
+Task ID: 17 Result: -0.961397
+Task ID: 18 Result: -0.750987
+Task ID: 19 Result: 0.149877
