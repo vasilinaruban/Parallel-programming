@@ -48,7 +48,7 @@ def main():
     parser = argparse.ArgumentParser(description='parametrs')
     parser.add_argument('--id', type=int, help='Id of camera', default=0)
     parser.add_argument('--res', type=str, help='Resolution', default='640x480')
-    parser.add_argument('--fps', type=float, help='Frame per second', default=60)
+    parser.add_argument('--fps', type=int, help='Frame per second', default=60)
 
     
 
@@ -59,7 +59,7 @@ def main():
     resol.append(int(resolut[1]))
     fps = args.fps
     cam = SensorCam(args.id, resol)
-    queue0, queue1, queue2 = queue.Queue(10), queue.Queue(10), queue.Queue(10)
+    queue0, queue1, queue2 = queue.Queue(2), queue.Queue(2), queue.Queue(2)
     sensor0, sensor1, sensor2 = SensorX(1), SensorX(0.1), SensorX(0.01)
     
     threading.Thread(target=sensor_loop, args=(sensor0, queue0), daemon=True).start()

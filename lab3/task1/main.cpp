@@ -1,63 +1,73 @@
 #include <iostream>
-#include <thread>
 #include <vector>
-#include <chrono>
+#include <thread>
 #include <memory>
-
-int count = 40;
+#include <ctime>
 
 double cpuSecond()
 {
-    using namespace std::chrono;
-    system_clock::time_point now = system_clock::now();
-    system_clock::duration tp = now.time_since_epoch();
-    return duration_cast<duration<double>>(tp).count();
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return ((double)ts.tv_sec + (double)ts.tv_nsec * 1.e-9);
 }
 
-void matrix_vector_product(double* a, double* b, double* c, int m, int n)
+/*
+ * matrix_vector_product: Compute matrix-vector product c[m] = a[m][n] * b[n]
+ */
+void matrix_vector_product(double *a, double *b, double *c, size_t m, size_t n)
 {
-    for (int i = 0; i < m; i++)
+    for (size_t i = 0; i < m; i++)
     {
         c[i] = 0.0;
-        for (int j = 0; j < n; j++)
+        for (size_t j = 0; j < n; j++)
             c[i] += a[i * n + j] * b[j];
     }
 }
 
-void matrix_vector_product_thread(double* a, double* b, double* c, int m, int n, int threadid, int items_per_thread, int remainder)
+/*
+ * matrix_vector_product_thread: Compute a part of matrix-vector product c[m] = a[m][n] * b[n]
+ */
+void matrix_vector_product_thread(double *a, double *b, double *c, size_t m, size_t n, size_t lb, size_t ub)
 {
-    int lb, ub;
-
-    if (threadid < remainder) {
-        lb = threadid * (items_per_thread + 1);
-        ub = lb + (items_per_thread + 1);
-    } 
-    else {
-        lb = threadid * items_per_thread + remainder;
-        ub = lb + items_per_thread;
-    }
-
-    for (int i = lb; i < ub; i++)
+    for (size_t i = lb; i <= ub; i++)
     {
         c[i] = 0.0;
-        for (int j = 0; j < n; j++)
+        for (size_t j = 0; j < n; j++)
             c[i] += a[i * n + j] * b[j];
+    }
+}
+
+void matrix_vector_product_parallel(double *a, double *b, double *c, size_t m, size_t n, size_t num_threads)
+{
+    std::vector<std::thread> threads;
+    size_t items_per_thread = m / num_threads;
+
+    for (size_t threadid = 0; threadid < num_threads; ++threadid)
+    {
+        size_t lb = threadid * items_per_thread;
+        size_t ub = (threadid == num_threads - 1) ? (m - 1) : (lb + items_per_thread - 1);
+        threads.emplace_back(matrix_vector_product_thread, a, b, c, m, n, lb, ub);
+    }
+
+    for (auto &t : threads)
+    {
+        t.join();
     }
 }
 
 void run_serial(size_t n, size_t m)
 {
-    std::unique_ptr<double[]> a(new double[m * n]);
-    std::unique_ptr<double[]> b(new double[n]);
-    std::unique_ptr<double[]> c(new double[m]);
+    auto a = std::make_unique<double[]>(m * n);
+    auto b = std::make_unique<double[]>(n);
+    auto c = std::make_unique<double[]>(m);
 
-    for (int i = 0; i < m; i++)
+    for (size_t i = 0; i < m; i++)
     {
-        for (int j = 0; j < n; j++)
+        for (size_t j = 0; j < n; j++)
             a[i * n + j] = i + j;
     }
 
-    for (int j = 0; j < n; j++)
+    for (size_t j = 0; j < n; j++)
         b[j] = j;
 
     double t = cpuSecond();
@@ -67,53 +77,40 @@ void run_serial(size_t n, size_t m)
     std::cout << "Elapsed time (serial): " << t << " sec." << std::endl;
 }
 
-void run_parallel(size_t n, size_t m)
+void run_parallel(size_t n, size_t m, size_t num_threads)
 {
-    std::unique_ptr<double[]> a(new double[m * n]);
-    std::unique_ptr<double[]> b(new double[n]);
-    std::unique_ptr<double[]> c(new double[m]);
+    auto a = std::make_unique<double[]>(m * n);
+    auto b = std::make_unique<double[]>(n);
+    auto c = std::make_unique<double[]>(m);
 
-    for (int i = 0; i < m; i++)
+    for (size_t i = 0; i < m; i++)
     {
-        for (int j = 0; j < n; j++)
+        for (size_t j = 0; j < n; j++)
             a[i * n + j] = i + j;
     }
 
-    for (int j = 0; j < n; j++)
+    for (size_t j = 0; j < n; j++)
         b[j] = j;
 
-    double t_start = cpuSecond(); 
+    double t = cpuSecond();
+    matrix_vector_product_parallel(a.get(), b.get(), c.get(), m, n, num_threads);
+    t = cpuSecond() - t;
 
-    std::vector<std::thread> threads;
-    int items_per_thread = m / count;
-    int remainder = m % count;
-
-    for (int i = 0; i < count; i++)
-    {
-        threads.push_back(std::thread(matrix_vector_product_thread, a.get(), b.get(), c.get(), m, n, i, items_per_thread, remainder));
-    }
-    for (auto& thread : threads)
-    {
-        thread.join();
-    }
-
-    double t_end = cpuSecond(); 
-    std::cout << "Elapsed time (parallel): " << t_end - t_start << " sec." << std::endl;
+    std::cout << "Elapsed time (parallel): " << t << " sec." << std::endl;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     size_t M = 1000;
     size_t N = 1000;
+    size_t num_threads = std::thread::hardware_concurrency(); // Number of threads to use
     if (argc > 1)
         M = atoi(argv[1]);
     if (argc > 2)
         N = atoi(argv[2]);
     if (argc > 3)
-        count = atoi(argv[3]);
-
+        num_threads = atoi(argv[3]);
     run_serial(M, N);
-    run_parallel(M, N);
-
+    run_parallel(M, N, num_threads);
     return 0;
 }
