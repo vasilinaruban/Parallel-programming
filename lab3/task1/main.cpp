@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 {
     size_t M = 1000;
     size_t N = 1000;
-    size_t num_threads = std::thread::hardware_concurrency(); // Number of threads to use
+    size_t num_threads = 1; 
     if (argc > 1)
         M = atoi(argv[1]);
     if (argc > 2)
