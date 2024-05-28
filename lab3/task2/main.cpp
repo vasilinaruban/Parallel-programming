@@ -27,6 +27,7 @@ public:
 
     void start() {
         if (!is_running) {
+        	std::unique_lock<std::mutex> lock(m);
             is_running = true;
             server_thread = std::thread(&Server::process_tasks, this);
         }
@@ -34,8 +35,10 @@ public:
 
     void stop() {
         if (is_running) {
+        	std::unique_lock<std::mutex> lock(m);
             is_running = false;
             cv.notify_all();
+            lock.unlock();
             server_thread.join();
         }
     }
