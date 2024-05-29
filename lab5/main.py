@@ -11,14 +11,14 @@ from ultralytics import YOLO
 def parse():
     parser = argparse.ArgumentParser(description="Запуск yolov8s-pose на нескольких потоках")
     parser.add_argument("-t", "--num_threads", type=int, default=1,
-                        help="Количество потоков для многопоточного режима.")
+                        help="Количество потоков.")
     parser.add_argument("video_path", type=str, help="Путь к входному видеофайлу.")
     parser.add_argument("output_file", type=str, help="Имя выходного видеофайла.")
     args = parser.parse_args()
     return args.num_threads, args.video_path, args.output_file
 
 
-def predict_work(in_queue, out_queue, stop_event):
+def predict(in_queue, out_queue, stop_event):
     model = YOLO("yolov8s-pose.pt")
     while not stop_event.is_set():
         frame = in_queue.get()
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     stop_event = Event()
     in_queues = [Queue() for _ in range(num_threads)]
     out_queues = [Queue() for _ in range(num_threads)]
-    threads = [Thread(target=predict_work, args=(in_queues[i], out_queues[i], stop_event)) for i in range(num_threads)]
+    threads = [Thread(target=predict, args=(in_queues[i], out_queues[i], stop_event)) for i in range(num_threads)]
     for thread in threads:
         thread.start()
 
