@@ -1,9 +1,11 @@
 #include <iostream>
 #include <boost/program_options.hpp>
+#include <stdio.h>
 #include <chrono>
 #include <cmath>
 #include <cstring>
 #include <omp.h>
+#include <openacc.h>
 
 #define OFFSET(x, y, m) (((x)*(m)) + (y))
 
@@ -59,9 +61,10 @@ int main(int argc, char *argv[])
 
     const double tol = vm["precision"].as<double>();
 
-    double *A = new double[n * m];
-    double *Anew = new double[n * m];
+    double *A = (double*) malloc(n * m * sizeof(double));
+    double *Anew = (double*) malloc(n * m * sizeof(double));
 
+    #pragma acc enter data create(A[0:n*m], Anew[0:n*m])
     initialize(A, Anew, m, n);
 
     cout << "Jacobi relaxation Calculation: " << n << " x " << m << " mesh" << endl;
@@ -75,14 +78,14 @@ int main(int argc, char *argv[])
         while (err > tol && iter < iter_max)
         {
             err = 0.0;
-#pragma acc parallel loop independent collapse(2) reduction(max:err)
+            #pragma acc parallel loop collapse(2) reduction(max:err)
             for( int j = 1; j < n-1; j++)
             {
                 for( int i = 1; i < m-1; i++ )
                 {
                     Anew[OFFSET(j, i, m)] = 0.2 * (A[OFFSET(j, i, m)] + 
                                                    A[OFFSET(j, i+1, m)] + 
-                                                   A[OFFSET(j, i-1, m)] +
+                                                   A[OFFSET(j, i-1, m)] + 
                                                    A[OFFSET(j-1, i, m)] + 
                                                    A[OFFSET(j+1, i, m)]);
 
@@ -90,13 +93,20 @@ int main(int argc, char *argv[])
                 }
             }
 
-            double *temp = A;
-            A = Anew;
-            Anew = temp;
+            #pragma acc parallel loop collapse(2)
+            for( int j = 1; j < n-1; j++)
+            {
+                for( int i = 1; i < m-1; i++ )
+                {
+                    A[OFFSET(j, i, m)] = Anew[OFFSET(j, i, m)];
+                }
+            }
 
             iter++;
         }
     }
+
+    #pragma acc exit data copyout(A[0:n*m]) delete(Anew[0:n*m])
 
     auto end = std::chrono::steady_clock::now();
 

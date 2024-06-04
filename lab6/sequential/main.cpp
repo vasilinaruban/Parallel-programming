@@ -80,8 +80,12 @@ int main(int argc, char *argv[])
             {
                 for( int i = 1; i < m-1; i++ )
                 {
-                    Anew[OFFSET(j, i, m)] = 0.2 * ( A[OFFSET(j, i+1, m)] + A[OFFSET(j, i-1, m)]
-                                                     + A[OFFSET(j-1, i, m)] + A[OFFSET(j+1, i, m)] + A[OFFSET(j, i, m)]);
+                    Anew[OFFSET(j, i, m)] = 0.2 * ( A[OFFSET(j, i+1, m)] + 
+                                                    A[OFFSET(j, i-1, m)]+ 
+                                                    A[OFFSET(j-1, i, m)] + 
+                                                    A[OFFSET(j+1, i, m)] + 
+                                                    A[OFFSET(j, i, m)]);
+                    
                     err = fmax( err, fabs(Anew[OFFSET(j, i, m)] - A[OFFSET(j, i , m)]));
                 }
             }
@@ -96,9 +100,6 @@ int main(int argc, char *argv[])
                 }
             }
             nvtxRangePop();
-
-            if (iter % 100 == 0)
-                cout << iter << ", " << err << endl;
 
             iter++;
         }
@@ -117,6 +118,8 @@ int main(int argc, char *argv[])
     auto end = std::chrono::steady_clock::now();
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    cout << iter << ", " << err << endl;
 
     cout << " total: " << duration.count() << " mls" << endl;
 
