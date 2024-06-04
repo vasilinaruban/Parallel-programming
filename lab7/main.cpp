@@ -7,6 +7,9 @@
 #include <openacc.h>
 #include <cublas_v2.h>
 
+#define OFFSET(x, y, m) (((x)*(m)) + (y))
+
+
 void PrintMatrix(const double *grid, size_t n) {
 #pragma acc update host(grid[0:n*n])
     for (size_t y = 0; y < n; ++y) {
